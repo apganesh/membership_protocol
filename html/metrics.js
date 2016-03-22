@@ -19,7 +19,7 @@ function initializeEventSourceClient(addr, status, mainserver) {
     }
 
     console.log("Creating  EventSource Client for: " + addr)
-    var source = new EventSource('http://' + addr + '/events');
+    var source = new EventSource('https://' + addr + '/events');
 
     evtServers[addr] = source;
 
