@@ -1,0 +1,5 @@
+{
+    "gossip_frequency": 2000,
+    "fail_timeout": 5000,
+    "cleanup_timeout": 25000
+}
