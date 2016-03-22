@@ -108,7 +108,7 @@ func main() {
 	go handleUDPMessages(udpMsgChan)
 
 	// Setup the HTTP server
-	go startHTTPServer(ipAddr)
+	go startHTTPServer(*addr, strconv.Itoa(*port))
 
 	// Setup the metrics event publisher
 	go func() {
@@ -125,31 +125,22 @@ func main() {
 	<-quitChan
 }
 
-func startHTTPServer(ipAddr string) {
+func startHTTPServer(ipAddr string, port string) {
 	// HTTP api for the server
 	r := mux.NewRouter()
 	observer = NewObserver()
 
 	r.HandleFunc("/terminate", TerminateHandler)
 
-	// Route these commands only for the master
-	// if cm.Type == MASTER {
-	// 	r.HandleFunc("/memberlist/{id}", MemberListHandler)
-	// 	r.HandleFunc("/eventlist/{id}", EventListHandler)
-	// 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
-	// }
-	r.HandleFunc("/memberlist/{id}", MemberListHandler)
-	r.HandleFunc("/eventlist/{id}", EventListHandler)
 	r.Handle("/events", observer)
-	//r.Handle("/cpu", cpuobserver)
-	//r.HandleFunc("/events", ob)
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
 
 	http.Handle("/", r)
 
 	fmt.Println("Starting the HTTP server")
-	err := http.ListenAndServe(ipAddr, r)
+	//err := http.ListenAndServe(ipAddr, r)
+	err := http.ListenAndServe(":"+port, r)
 	if err != nil {
 		panic(err)
 	}
