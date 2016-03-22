@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -217,14 +216,6 @@ func terminateSimulator_Timer() {
 
 	}
 
-}
-
-func RedirectHandler(rw http.ResponseWriter, req *http.Request) {
-	laddr := getLocalIPAddress()
-	rhost := "http://" + laddr + ":8900"
-	fmt.Println("Redirecting to", rhost)
-	http.Redirect(rw, req, rhost, 301)
-	return
 }
 
 func main() {
