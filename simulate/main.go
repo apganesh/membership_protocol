@@ -69,6 +69,7 @@ func startMaster(port string) {
 		log.Println("Had an error in startMaster", err)
 		log.Fatal(err)
 	}
+	cmd.Wait()
 }
 
 func initializeMachines() {

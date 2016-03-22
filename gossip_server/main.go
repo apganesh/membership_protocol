@@ -134,7 +134,8 @@ func startHTTPServer(ipAddr string, port string) {
 
 	r.Handle("/events", observer)
 
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
+	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("html/"))))
+	//r.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
 
 	http.Handle("/", r)
 
