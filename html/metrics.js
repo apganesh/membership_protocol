@@ -18,10 +18,18 @@ function initializeEventSourceClient(addr, status, mainserver) {
         return
     }
 
-    console.log("Creating  EventSource Client for: " + addr)
-        //var source = new EventSource('https://' + addr + '/events');
+
+    //var source = new EventSource('https://' + addr + '/events');
+
     var x = addr.split(":")
-    var source = new EventSource(':' + x[1] + '/events');
+    var source;
+    if (x[1] === undefined) {
+        console.log("Creating  EventSource Client for: " + addr)
+        source = new EventSource('https://' + addr + '/events');
+    } else {
+        console.log("Creating event source " + ":" + x[1] + '/events')
+        source = new EventSource('https://' + document.location.hostname + ':' + x[1] + '/events');
+    }
     evtServers[addr] = source;
 
     source.onopen = function(event) {
