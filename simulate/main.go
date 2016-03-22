@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -12,6 +13,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -218,6 +221,12 @@ func terminateSimulator_Timer() {
 
 }
 
+func RedirectHandler(rw http.ResponseWriter, req *http.Request) {
+
+	http.Redirect(rw, req, ":8900", http.StatusFound)
+	return
+}
+
 func main() {
 	// Initialize the randowm seed
 	rand.Seed(time.Now().Unix())
@@ -240,5 +249,17 @@ func main() {
 	// time.Sleep(2 * time.Second)
 	go bringDownMachines_Timer()
 
+	// Start the http server
+	r := mux.NewRouter()
+	r.HandleFunc("/", RedirectHandler)
+	var port = os.Getenv("PORT")
+	if port == "" {
+		port = "4749"
+	}
+	fmt.Println("Listening simulate : ", port)
+	err := http.ListenAndServe(":"+port, r)
+	if err != nil {
+		panic(err)
+	}
 	<-quitCh
 }
