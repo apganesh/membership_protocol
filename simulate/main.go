@@ -13,8 +13,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -222,8 +220,10 @@ func terminateSimulator_Timer() {
 }
 
 func RedirectHandler(rw http.ResponseWriter, req *http.Request) {
-
-	http.Redirect(rw, req, ":8900", http.StatusFound)
+	laddr := getLocalIPAddress()
+	rhost := "http://" + laddr + ":8900"
+	fmt.Println("Redirecting to", rhost)
+	http.Redirect(rw, req, rhost, 301)
 	return
 }
 
@@ -250,16 +250,19 @@ func main() {
 	go bringDownMachines_Timer()
 
 	// Start the http server
-	r := mux.NewRouter()
-	r.HandleFunc("/", RedirectHandler)
+
+	http.HandleFunc("/", RedirectHandler)
+
 	var port = os.Getenv("PORT")
 	if port == "" {
-		port = "4749"
+		port = "7700"
 	}
-	fmt.Println("Listening simulate : ", port)
-	err := http.ListenAndServe(":"+port, r)
+	laddr := getLocalIPAddress()
+	fmt.Println("Listening simulate : ", laddr, ":", port)
+	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Waiting for quit signal")
 	<-quitCh
 }
