@@ -57,15 +57,15 @@ func signalHandler(ch chan os.Signal) {
 		os.Exit(1)
 	}
 }
-func startMaster() {
+func startMaster(port string) {
 	lAddr := getLocalIPAddress()
-	mNodeIP = lAddr + ":" + strconv.Itoa(8900)
+	mNodeIP = lAddr + ":" + port
 
-	cmd := exec.Command("bin/gossip_server", "-masternode", "-config", "cfg/gossip_config.json")
+	cmd := exec.Command("bin/gossip_server", "-masternode", "-addr", lAddr, "-port", port, "-config", "cfg/gossip_config.json")
 	cmd.Stdout = os.Stdout
 	err := cmd.Start()
 
-	log.Println("Starting Master Node")
+	log.Println("Starting Master Node ", mNodeIP)
 	if err != nil {
 		log.Println("Had an error in startMaster", err)
 		log.Fatal(err)
@@ -84,7 +84,7 @@ func initializeMachines() {
 func startServer(ipaddr string) {
 	addr, port, _ := net.SplitHostPort(ipaddr)
 	log.Println("Starting  Node: ", addr, port)
-	cmd := exec.Command("bin/gossip_server", "-addr", addr, "-port", port, "-config", "cfg/gossip_config.json")
+	cmd := exec.Command("bin/gossip_server", "-masteraddr", mNodeIP, "-addr", addr, "-port", port, "-config", "cfg/gossip_config.json")
 	//cmd.Stdout = os.Stdout
 	err := cmd.Start()
 
@@ -239,7 +239,13 @@ func main() {
 	quitCh := make(chan bool)
 
 	initializeMachines()
-	go startMaster()
+
+	var port = os.Getenv("PORT")
+	if port == "" {
+		port = "7700"
+	}
+
+	go startMaster(port)
 	time.Sleep(2 * time.Second)
 	fmt.Println("Starting simulateFailures")
 	//go simulateFailures()
@@ -249,20 +255,6 @@ func main() {
 	// time.Sleep(2 * time.Second)
 	go bringDownMachines_Timer()
 
-	// Start the http server
-
-	http.HandleFunc("/", RedirectHandler)
-
-	var port = os.Getenv("PORT")
-	if port == "" {
-		port = "7700"
-	}
-	laddr := getLocalIPAddress()
-	fmt.Println("Listening simulate : ", laddr, ":", port)
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
-		panic(err)
-	}
 	fmt.Println("Waiting for quit signal")
 	<-quitCh
 }
