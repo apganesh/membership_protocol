@@ -107,20 +107,11 @@ func main() {
 	// Handle incoming UDP data from the other members
 	go handleUDPMessages(udpMsgChan)
 
-	// Setup the HTTP server
+	// Setup  HTTP server to provide metrics
 	go startHTTPServer(*addr, strconv.Itoa(*port))
 
 	// Setup the metrics event publisher
-	go func() {
-
-		tt := time.Tick(1 * time.Second)
-		for {
-			select {
-			case <-tt:
-				publishMetrics()
-			}
-		}
-	}()
+	go metricsDaemon()
 
 	<-quitChan
 }
@@ -135,13 +126,12 @@ func startHTTPServer(ipAddr string, port string) {
 	r.Handle("/events", observer)
 
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("html/"))))
-	//r.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
 
 	http.Handle("/", r)
 
-	fmt.Println("Starting the HTTP server")
-	//err := http.ListenAndServe(ipAddr, r)
-	err := http.ListenAndServe(":"+port, r)
+	fmt.Println("Starting the HTTP server at: ", ipAddr+":"+port)
+
+	err := http.ListenAndServe(ipAddr+":"+port, r)
 	if err != nil {
 		panic(err)
 	}

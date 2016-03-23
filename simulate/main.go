@@ -60,7 +60,7 @@ func startMaster(port string) {
 	lAddr := getLocalIPAddress()
 	mNodeIP = lAddr + ":" + port
 
-	cmd := exec.Command("bin/gossip_server", "-masternode", "-addr", lAddr, "-port", port, "-config", "cfg/gossip_config.json")
+	cmd := exec.Command("gossip_server", "-masternode", "-addr", lAddr, "-port", port, "-config", "cfg/gossip_config.json")
 	cmd.Stdout = os.Stdout
 	err := cmd.Start()
 
@@ -84,7 +84,7 @@ func initializeMachines() {
 func startServer(ipaddr string) {
 	addr, port, _ := net.SplitHostPort(ipaddr)
 	log.Println("Starting  Node: ", addr, port)
-	cmd := exec.Command("bin/gossip_server", "-masteraddr", mNodeIP, "-addr", addr, "-port", port, "-config", "cfg/gossip_config.json")
+	cmd := exec.Command("gossip_server", "-masteraddr", mNodeIP, "-addr", addr, "-port", port, "-config", "cfg/gossip_config.json")
 	//cmd.Stdout = os.Stdout
 	err := cmd.Start()
 
@@ -181,7 +181,7 @@ func terminateMachines() {
 	processed = nil
 }
 
-func bringDownMachines_Timer() {
+func bringDownMachinesTimer() {
 	hb := time.Tick(Tdown)
 	for {
 		select {
@@ -191,7 +191,7 @@ func bringDownMachines_Timer() {
 	}
 }
 
-func bringUpMachines_Timer() {
+func bringUpMachinesTimer() {
 	hb := time.Tick(Tup)
 	for {
 		select {
@@ -201,15 +201,15 @@ func bringUpMachines_Timer() {
 	}
 }
 
-func terminateSimulator_Timer() {
+func terminateSimulatorTimer() {
 
-	shutdown_timer := time.NewTimer(5 * time.Minute)
-	masternode_timer := time.NewTimer(6 * time.Minute)
+	shutdowntimer := time.NewTimer(5 * time.Minute)
+	masternodetimer := time.NewTimer(6 * time.Minute)
 	for {
 		select {
-		case <-shutdown_timer.C:
+		case <-shutdowntimer.C:
 			terminateMachines()
-		case <-masternode_timer.C:
+		case <-masternodetimer.C:
 			fmt.Println("Terminating the main Node")
 			stopServer(mNodeIP) // Stop the main node after 1 minute to let the other nodes cleanup
 			os.Exit(1)          // Need to do a graceful cleanup.
@@ -241,11 +241,10 @@ func main() {
 	time.Sleep(2 * time.Second)
 	fmt.Println("Starting simulateFailures")
 	//go simulateFailures()
-	go terminateSimulator_Timer()
+	go terminateSimulatorTimer()
 
-	go bringUpMachines_Timer()
-	// time.Sleep(2 * time.Second)
-	go bringDownMachines_Timer()
+	go bringUpMachinesTimer()
+	go bringDownMachinesTimer()
 
 	fmt.Println("Waiting for quit signal")
 	<-quitCh

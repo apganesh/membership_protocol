@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -82,6 +83,17 @@ func handleUDPMessages(udpMsgChan chan IncomingMessage) {
 		udpMsgChan <- IncomingMessage{*addr, buf[:n]}
 	}
 
+}
+
+func metricsDaemon() {
+
+	tt := time.Tick(1 * time.Second)
+	for {
+		select {
+		case <-tt:
+			publishMetrics()
+		}
+	}
 }
 
 func signalHandler(ch chan os.Signal) {
